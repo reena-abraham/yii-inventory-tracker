@@ -91,11 +91,85 @@ class SiteController extends Controller
 		{
 			$model->attributes=$_POST['LoginForm'];
 			// validate user input and redirect to the previous page if valid
-			if($model->validate() && $model->login())
+			if ($model->validate() && $model->login()) {
+				$user = Users::model()->findByPk(Yii::app()->user->id);
+				$roles = $user->roles;
+				if (!empty($roles)) {
+					$role = $roles[0];
+					if ($role->id == 1) {
+						$this->redirect(array('site/adminDashboard'));
+					} elseif ($role->id == 2) {
+						$this->redirect(array('site/userDashboard'));
+					} else {
+						$this->redirect(Yii::app()->user->returnUrl);
+					}
+				} else {
+					throw new CHttpException(403, "No role assigned to this user.");
+				}
 				$this->redirect(Yii::app()->user->returnUrl);
+			}
 		}
 		// display the login form
 		$this->render('login',array('model'=>$model));
+	}
+
+
+
+	public function actionRegister()
+	{
+		if (!Yii::app()->user->isGuest) {
+			$this->redirect(Yii::app()->homeUrl);
+			return;
+		}
+
+		$model = new Users('register');
+
+		if (isset($_POST['Users'])) {
+			$model->attributes = $_POST['Users'];
+
+			if ($model->validate()) {
+				// Set additional attributes before saving
+				$model->password = CPasswordHelper::hashPassword($model->password);
+				$model->created_at = date('Y-m-d H:i:s');
+				if ($model->save()) {
+					Yii::app()->db->createCommand()->insert('user_roles', array(
+						'user_id' => $model->id,
+						'role_id' => 2,
+					));
+
+					Yii::app()->user->setFlash('message', 'Registration successful');
+					$this->redirect(array('site/login'));
+				} else {
+					Yii::app()->user->setFlash('error', 'Registration failed');
+				}
+			} else {
+				// Clear password on validation failure
+				$model->password = '';
+			}
+		}
+
+		$this->render('register', array('model' => $model));
+	}
+
+	public function actionAdminDashboard()
+	{
+		// $this->layout = 'admin';
+		// Only allow admin
+		if (Yii::app()->user->getState('role') != 1) {
+			throw new CHttpException(403, 'Unauthorized access');
+		}
+
+		$this->render('admin_dashboard');
+	}
+
+	public function actionUserDashboard()
+	{
+		if (Yii::app()->user->getState('role') != 2) {
+			throw new CHttpException(403, 'Unauthorized access');
+		}
+		$userId = Yii::app()->user->id;
+		$user = Users::model()->findByPk($userId);
+		$this->render('user_dashboard',array('user'=>$user));
 	}
 
 	/**

@@ -97,7 +97,11 @@ $('.search-form form').submit(function(){
 	// 'rowCssClassExpression' => '($data->quantity < 5) ? "low-stock" : ""',
 	'columns'=>array(
 		'id',
-		'name',
+		array(
+			 'name' => 'name',  // ✅ this will allow sorting by product name
+        'value' => '$data->name',
+        'sortable' => true, // optional, true by default
+		),
 		array(
 			'name' => 'category_id',
 			'value' => '$data->category ? $data->category->name : "N/A"',
@@ -105,12 +109,13 @@ $('.search-form form').submit(function(){
 				$model,
 				'category_id',
 				CHtml::listData(Category::model()->findAll(), 'id', 'name'),
-				array('empty' => '-- Select Category --')
+				array('empty' => '-- Select Category --'),
 			),
+			'sortable' => true,
 		),
 		'quantity',
 		'unit_price',
-		'created_at',
+		// 'created_at',
 		/*
 		'updated_at',
 		*/

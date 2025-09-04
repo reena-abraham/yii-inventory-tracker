@@ -196,7 +196,7 @@ class ProductController extends Controller
 	}
 	public function actionBulkUpload()
 	{
-		$model = new Product();
+		$model = new Product('csvUpload');
 
 		if (isset($_FILES['Product']) && $_FILES['Product']['error']['csvFile'] === UPLOAD_ERR_OK) {
 

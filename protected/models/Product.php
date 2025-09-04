@@ -44,7 +44,7 @@ class Product extends CActiveRecord
 			array('id, name, category_id, quantity, unit_price, created_at, updated_at', 'safe', 'on' => 'search'),
 
 
-			array('csvFile', 'file', 'types' => 'csv', 'allowEmpty' => false, 'safe' => false),
+			array('csvFile', 'file', 'types' => 'csv', 'allowEmpty' => false, 'safe' => false,'on'=>'csvUpload'),
 		);
 	}
 
@@ -103,10 +103,20 @@ class Product extends CActiveRecord
 		$criteria->compare('updated_at', $this->updated_at, true);
 
 
-		
+
 
 		return new CActiveDataProvider($this, array(
 			'criteria' => $criteria,
+			'sort' => [
+				'attributes' => [
+					'name' => [
+						'asc' => 't.name ASC',
+						'desc' => 't.name DESC',
+					],
+					'quantity',
+					'unit_price',
+				],
+			],
 			'pagination' => array(
 				'pageSize' => 10, // Change as needed
 			),
